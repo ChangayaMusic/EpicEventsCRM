@@ -2,10 +2,25 @@ from django.core.management.base import BaseCommand
 from crm.models import Contract, Client
 from login.models import Staff
 
-class CreateContractCommand(BaseCommand):
-    help = 'Create a new contract'
+class Command(BaseCommand):
+    help = 'Create, list, update, or delete contracts'
+
+    def add_arguments(self, parser):
+        parser.add_argument('action', choices=['create_contract', 'list_contracts', 'update_contract', 'delete_contract'])
 
     def handle(self, *args, **options):
+        action = options['action']
+
+        if action == 'create_contract':
+            self.create_contract()
+        elif action == 'list_contracts':
+            self.list_contracts()
+        elif action == 'update_contract':
+            self.update_contract()
+        elif action == 'delete_contract':
+            self.delete_contract()
+
+    def create_contract(self):
         client_id = input("Enter client ID: ")
         try:
             client = Client.objects.get(pk=client_id)
@@ -30,22 +45,16 @@ class CreateContractCommand(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS(f'Successfully created contract: {contract.id}'))
 
-class ListContractsCommand(BaseCommand):
-    help = 'List all contracts'
-
-    def handle(self, *args, **options):
+    def list_contracts(self):
         contracts = Contract.objects.all()
 
         if contracts:
             for contract in contracts:
-                self.stdout.write(f'{contract} - Status: {"Signed" if contract.status else "Not Signed"}')
+                self.stdout.write(f'ID: {contract.id} - Status: {"Signed" if contract.status else "Not Signed"}')
         else:
             self.stdout.write('No contracts found.')
 
-class UpdateContractCommand(BaseCommand):
-    help = 'Update contract information'
-
-    def handle(self, *args, **options):
+    def update_contract(self):
         contract_id = input("Enter contract ID to update: ")
         try:
             contract = Contract.objects.get(pk=contract_id)
@@ -53,9 +62,9 @@ class UpdateContractCommand(BaseCommand):
             self.stdout.write(self.style.ERROR('Contract not found.'))
             return
 
-        total_amount = input("Enter new total amount: ")
-        amount_due = input("Enter new amount due: ")
-        status = input("Is the contract signed? (yes/no): ").lower() == 'yes'
+        total_amount = input(f'Enter new total amount (current: {contract.total_amount}): ') or contract.total_amount
+        amount_due = input(f'Enter new amount due (current: {contract.amount_due}): ') or contract.amount_due
+        status = input(f'Is the contract signed? (yes/no, current: {"yes" if contract.status else "no"}): ').lower() == 'yes'
 
         contract.total_amount = total_amount
         contract.amount_due = amount_due
@@ -65,10 +74,7 @@ class UpdateContractCommand(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS(f'Successfully updated contract: {contract.id}'))
 
-class DeleteContractCommand(BaseCommand):
-    help = 'Delete a contract'
-
-    def handle(self, *args, **options):
+    def delete_contract(self):
         contract_id = input("Enter contract ID to delete: ")
         try:
             contract = Contract.objects.get(pk=contract_id)
