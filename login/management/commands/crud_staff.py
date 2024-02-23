@@ -34,13 +34,15 @@ class Command(BaseCommand):
         staff = Staff.objects.create(
             name=name,
             email=email,
-            department=department
+            department=department,
+            username=email  # Set username to the email
         )
         staff.set_password(password)
         staff.save()
 
         self.stdout.write(self.style.SUCCESS(
             f'Successfully created staff member: {staff.name}'))
+
 
     def list_staff(self):
         staff_members = Staff.objects.all()
