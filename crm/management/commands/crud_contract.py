@@ -1,12 +1,13 @@
 from django.core.management.base import BaseCommand
 from crm.models import Contract, Client
 from login.models import Staff
+from login.authorization import management_required, sales_or_management_required
 
 class Command(BaseCommand):
     help = 'Create, list, update, or delete contracts'
 
     def add_arguments(self, parser):
-        parser.add_argument('action', choices=['create_contract', 'list_contracts', 'update_contract', 'delete_contract'])
+        parser.add_argument('action', choices=['create_contract', 'list_contracts', 'update_contract', 'delete_contract', 'show_unsigned', 'show_due'])
 
     def handle(self, *args, **options):
         action = options['action']
@@ -19,7 +20,12 @@ class Command(BaseCommand):
             self.update_contract()
         elif action == 'delete_contract':
             self.delete_contract()
-
+        elif action == 'show_unsigned':
+            self.show_unsigned()
+        elif action == 'show_due':
+            self.show_due()
+            
+    @management_required
     def create_contract(self):
         client_id = input("Enter client ID: ")
         try:
@@ -53,7 +59,8 @@ class Command(BaseCommand):
                 self.stdout.write(f'ID: {contract.id} - Status: {"Signed" if contract.status else "Not Signed"}')
         else:
             self.stdout.write('No contracts found.')
-
+            
+    @sales_or_management_required
     def update_contract(self):
         contract_id = input("Enter contract ID to update: ")
         try:
@@ -73,7 +80,7 @@ class Command(BaseCommand):
         contract.save()
 
         self.stdout.write(self.style.SUCCESS(f'Successfully updated contract: {contract.id}'))
-
+    @management_required
     def delete_contract(self):
         contract_id = input("Enter contract ID to delete: ")
         try:
@@ -89,3 +96,17 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(f'Successfully deleted contract: {contract.id}'))
         else:
             self.stdout.write(self.style.ERROR('Deletion canceled.'))
+
+    @sales_or_management_required
+    def show_unsigned(self):
+        unsigned_contracts = Contract.objects.filter(status=False)
+
+        for contract in unsigned_contracts:
+            print(f"Contract {contract.id} - {contract.client.full_name}, Status: {'Not Signed'}")
+
+    @sales_or_management_required
+    def show_due(self):
+        contracts_with_amount_due = Contract.objects.filter(amount_due__gt=0)
+
+        for contract in contracts_with_amount_due:
+            print(f"Contract {contract.id} - {contract.client.full_name}, Amount Due: {contract.amount_due}")

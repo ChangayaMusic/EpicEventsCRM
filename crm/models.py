@@ -39,7 +39,7 @@ class Event(models.Model):
     )
     event_start_date = models.DateTimeField()
     event_end_date = models.DateTimeField()
-    staff = models.ForeignKey(
+    support_contact = models.ForeignKey(
         Staff, on_delete=models.SET_NULL, null=True, related_name="events"
     )
     location = models.CharField(max_length=200)

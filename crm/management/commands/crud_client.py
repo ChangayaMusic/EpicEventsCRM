@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand
 from crm.models import Client
+from login.authorization import is_sales_or_management, management_or_client_staff_required
 
 class Command(BaseCommand):
     help = 'Create, list, update, or delete clients'
@@ -18,7 +19,8 @@ class Command(BaseCommand):
             self.update_client()
         elif action == 'delete_client':
             self.delete_client()
-
+            
+    @is_sales_or_management
     def create_client(self):
         full_name = input("Enter full name: ")
         email = input("Enter email: ")
@@ -42,7 +44,8 @@ class Command(BaseCommand):
                 self.stdout.write(f'ID: {client.id}, {client.full_name} - {client.email}')
         else:
             self.stdout.write('No clients found.')
-
+            
+    @management_or_client_staff_required
     def update_client(self):
         client_id = input("Enter client ID to update: ")
         try:
@@ -59,7 +62,7 @@ class Command(BaseCommand):
         client.save()
 
         self.stdout.write(self.style.SUCCESS(f'Successfully updated client: {client.full_name}'))
-
+    @management_or_client_staff_required
     def delete_client(self):
         client_id = input("Enter client ID to delete: ")
         try:
