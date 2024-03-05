@@ -2,7 +2,7 @@ from django.core.management.base import BaseCommand
 from login.models import Staff
 
 
-class LoginCommand(BaseCommand):
+class Command(BaseCommand):
     def handle(self, *args, **options):
         email = input("Enter email: ")
         password = input("Enter password: ")
