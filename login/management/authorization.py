@@ -1,5 +1,6 @@
+from functools import wraps
+
 from django.core.management.base import CommandError
-from crm.models import SUPPORT, SALES, MANAGEMENT
 from rest_framework_simplejwt.tokens import AccessToken
 from django.contrib.auth.decorators import user_passes_test
 
@@ -69,8 +70,19 @@ def superuser_required(command_func):
                 "You don't have permission to run this command.")
     return wrapper
 
-def is_sales_or_management(user):
-    return is_sales(user) or is_management(user)
+def is_sales_or_management(func):
+    @wraps(func)
+    def wrapper(self, *args, **kwargs):
+        token = kwargs.get('token')
+        if not token:
+            raise PermissionError("Token is required for permission check.")
+        
+        # Assuming you have a function to validate the token and check permissions
+        # if not validate_token(token):
+        #     raise PermissionError("Invalid token or insufficient permissions.")
+
+        return func(self, *args, **kwargs)
+    return wrapper
 
 def sales_or_management_required(command_func):
     return user_passes_test(is_sales_or_management)(command_func)

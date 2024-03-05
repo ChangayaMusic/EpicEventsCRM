@@ -3,11 +3,11 @@
 from django.core.management.base import BaseCommand
 from login.models import Staff
 from django.contrib.auth.hashers import make_password, check_password
-from authorization import superuser_required
+# from authorization import superuser_required
 
 
 class Command(BaseCommand):
-    @superuser_required
+    # @superuser_required
     help = 'Create, list, update, or delete staff members'
 
     def add_arguments(self, parser):
