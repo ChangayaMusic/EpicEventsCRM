@@ -146,7 +146,7 @@ class Command(BaseCommand):
         else:
             print("No events without support found.")
 
-    @@management_required
+    @management_required
     def assign_support_contact(self, event_id, staff_id):
         try:
             event = Event.objects.get(pk=event_id)
